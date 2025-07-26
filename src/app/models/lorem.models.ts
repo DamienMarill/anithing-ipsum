@@ -1,7 +1,7 @@
 export interface LoremRequest {
   theme: string;
   paragraphs: number;
-  sentencesPerParagraph: number;
+  paragraphLength: 'court' | 'moyen' | 'long' | 'variable';
 }
 
 export interface LoremResponse {

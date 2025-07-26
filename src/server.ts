@@ -1,5 +1,6 @@
 // Configuration des variables d'environnement
-import { config } from 'dotenv';
+import {config} from 'dotenv';
+
 config();
 
 import {
@@ -9,7 +10,7 @@ import {
   writeResponseToNodeResponse,
 } from '@angular/ssr/node';
 import express from 'express';
-import { join } from 'node:path';
+import {join} from 'node:path';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 
@@ -38,13 +39,13 @@ const apiLimiter = rateLimit({
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({status: 'ok', timestamp: new Date().toISOString()});
 });
 
 // API endpoint pour générer le lorem ipsum
 app.post('/api/generate-lorem', apiLimiter, async (req, res): Promise<void> => {
   try {
-    const { theme, paragraphs, sentencesPerParagraph } = req.body;
+    const {theme, paragraphs, paragraphLength} = req.body;
 
     // Validation des paramètres
     if (!theme || !theme.trim()) {
@@ -55,18 +56,22 @@ app.post('/api/generate-lorem', apiLimiter, async (req, res): Promise<void> => {
       return;
     }
 
-    if (!paragraphs || paragraphs < 1 || paragraphs > 10) {
+    if (!paragraphs || paragraphs < 1) {
       res.status(400).json({
         success: false,
-        error: 'Le nombre de paragraphes doit être entre 1 et 10'
+        error: 'Le nombre de paragraphes doit être supérieur à 0'
       });
       return;
     }
 
-    if (!sentencesPerParagraph || sentencesPerParagraph < 2 || sentencesPerParagraph > 10) {
+    // Validation stricte de la longueur de paragraphe
+    type ParagraphLength = 'court' | 'moyen' | 'long' | 'variable';
+    const validLengths: ParagraphLength[] = ['court', 'moyen', 'long', 'variable'];
+
+    if (!paragraphLength || !validLengths.includes(paragraphLength)) {
       res.status(400).json({
         success: false,
-        error: 'Le nombre de phrases par paragraphe doit être entre 2 et 10'
+        error: 'La taille de paragraphe doit être : court, moyen, long ou variable'
       });
       return;
     }
@@ -81,9 +86,17 @@ app.post('/api/generate-lorem', apiLimiter, async (req, res): Promise<void> => {
       return;
     }
 
+    // Mapping des tailles vers instructions avec typage strict
+    const lengthInstructions: Record<ParagraphLength, string> = {
+      'court': 'environ 1-10 phrases par paragraphe',
+      'moyen': 'environ 10-20 phrases par paragraphe',
+      'long': 'environ 20-30 phrases par paragraphe',
+      'variable': 'longueur variable par paragraphe allant de 1 à 30 phrases',
+    };
+
     // Préparation du prompt pour Mistral
     const prompt = `Génère un faux texte de type "lorem ipsum" sur le thème "${theme}".
-Le texte doit contenir ${paragraphs} paragraphe(s), avec environ ${sentencesPerParagraph} phrases par paragraphe.
+Le texte doit contenir ${paragraphs} paragraphe(s), avec ${lengthInstructions[paragraphLength as ParagraphLength]}.
 
 Règles importantes :
 - Utilise un vocabulaire et des références liés au thème "${theme}"
@@ -92,6 +105,7 @@ Règles importantes :
 - Commence chaque paragraphe par une majuscule
 - Assure-toi que le texte soit cohérent avec le thème choisi
 - Le résultat doit être du texte de remplissage, pas du contenu informatif réel
+- Respecte bien la consigne de longueur : ${lengthInstructions[paragraphLength as ParagraphLength]}
 
 Réponds uniquement avec le texte généré, sans commentaires ni explications.`;
 

@@ -1,13 +1,13 @@
-import { Component, computed, inject, signal } from '@angular/core';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { CommonModule } from '@angular/common';
-import { LoremService } from '../services/lorem.service';
-import type { LoremRequest } from '../models/lorem.models';
+import {Component, inject, signal} from '@angular/core';
+import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import {CommonModule} from '@angular/common';
+import {LoremService} from '../services/lorem.service';
+import type {LoremRequest} from '../models/lorem.models';
 
 interface LoremForm {
   theme: FormControl<string>;
   paragraphs: FormControl<number>;
-  sentencesPerParagraph: FormControl<number>;
+  paragraphLength: FormControl<'court' | 'moyen' | 'long' | 'variable'>;
 }
 
 @Component({
@@ -30,10 +30,12 @@ interface LoremForm {
 
         <!-- Formulaire -->
         <div class="mb-8">
-          <form [formGroup]="form" (ngSubmit)="onSubmit()" class="bg-base rounded-xl shadow-lg p-6 border border-gray-100">
+          <form [formGroup]="form" (ngSubmit)="onSubmit()"
+                class="bg-base rounded-xl shadow-lg p-6 border border-gray-100">
             <div class="flex items-center gap-3 mb-6">
               <svg class="w-6 h-6 text-color-light" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
               </svg>
               <h2 class="text-xl font-semibold text-color">Paramètres de génération</h2>
             </div>
@@ -58,50 +60,66 @@ interface LoremForm {
                 }
               </div>
 
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Paragraphs Range -->
+              <div class="grid grid-cols-1 md:grid-cols-2 md:gap-10 gap-6">
+                <!-- Nombre de paragraphes avec input numérique et boutons -->
                 <div>
                   <label for="paragraphs" class="block text-sm font-medium text-color mb-2">
                     Nombre de paragraphes
                   </label>
-                  <div class="relative">
+                  <div class="flex items-center gap-2">
+                    <button
+                      type="button"
+                      (click)="decrementParagraphs()"
+                      [disabled]="isLoading() || (form.get('paragraphs')?.value ?? 1) <= 1"
+                      class="flex items-center justify-center w-10 h-10 secondary"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+                      </svg>
+                    </button>
+
                     <input
                       id="paragraphs"
-                      type="range"
+                      type="number"
                       min="1"
-                      max="10"
                       formControlName="paragraphs"
-                      class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                      class="flex-1 text-center input"
                       [disabled]="isLoading()"
                     />
-                    <div class="flex justify-between text-xs text-gray-500 mt-1">
-                      <span>1</span>
-                      <span class="font-medium text-color-light">{{ form.get('paragraphs')?.value }}</span>
-                      <span>10</span>
-                    </div>
+
+                    <button
+                      type="button"
+                      (click)="incrementParagraphs()"
+                      [disabled]="isLoading()"
+                      class="flex items-center justify-center w-10 h-10 secondary"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                      </svg>
+                    </button>
                   </div>
                 </div>
 
-                <!-- Sentences Range -->
+                <!-- Taille de paragraphe en radio buttons -->
                 <div>
-                  <label for="sentences" class="block text-sm font-medium text-gray-700 mb-2">
-                    Phrases par paragraphe
+                  <label class="block text-sm font-medium text-color mb-3">
+                    Taille de paragraphe
                   </label>
-                  <div class="relative">
-                    <input
-                      id="sentences"
-                      type="range"
-                      min="2"
-                      max="10"
-                      formControlName="sentencesPerParagraph"
-                      class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-                      [disabled]="isLoading()"
-                    />
-                    <div class="flex justify-between text-xs text-gray-500 mt-1">
-                      <span>2</span>
-                      <span class="font-medium text-color-light">{{ form.get('sentencesPerParagraph')?.value }}</span>
-                      <span>10</span>
-                    </div>
+                  <div class="flex gap-6">
+                    @for (option of paragraphLengthOptions; track option.value) {
+                      <label class="flex items-center space-x-3 cursor-pointer">
+                        <input
+                          type="radio"
+                          [value]="option.value"
+                          formControlName="paragraphLength"
+                          class="radio"
+                          [disabled]="isLoading()"
+                        />
+                        <div class="flex-1">
+                          <div class="text-sm font-medium text-color">{{ option.label }}</div>
+                        </div>
+                      </label>
+                    }
                   </div>
                 </div>
               </div>
@@ -113,14 +131,17 @@ interface LoremForm {
                 class="w-full bg-grad"
               >
                 @if (isLoading()) {
-                  <svg class="animate-spin -ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <svg class="animate-spin -ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none"
+                       viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <path class="opacity-75" fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
                   Génération en cours...
                 } @else {
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
                   </svg>
                   Générer le lorem ipsum
                 }
@@ -137,7 +158,9 @@ interface LoremForm {
                 <div class="flex">
                   <div class="flex-shrink-0">
                     <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                      <path fill-rule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                            clip-rule="evenodd"></path>
                     </svg>
                   </div>
                   <div class="ml-3">
@@ -157,12 +180,15 @@ interface LoremForm {
                   >
                     @if (copied()) {
                       <svg class="w-4 h-4 text-green-300" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                        <path fill-rule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clip-rule="evenodd"></path>
                       </svg>
                       Copié !
                     } @else {
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                       </svg>
                       Copier
                     }
@@ -192,15 +218,52 @@ export class LoremGeneratorComponent {
   readonly currentTheme = signal<string>('');
   readonly copied = signal(false);
 
+  // Options pour la taille de paragraphe
+  readonly paragraphLengthOptions = [
+    {
+      value: 'court' as const,
+      label: 'Court',
+      description: '1-10 phrases par paragraphe'
+    },
+    {
+      value: 'moyen' as const,
+      label: 'Moyen',
+      description: '10-20 phrases par paragraphe'
+    },
+    {
+      value: 'long' as const,
+      label: 'Long',
+      description: '20-30 phrases par paragraphe'
+    },
+    {
+      value: 'variable' as const,
+      label: 'Variable',
+      description: 'Longueur aléatoire par paragraphe'
+    }
+  ];
+
   // Formulaire réactif avec validation
   readonly form = new FormGroup<LoremForm>({
     theme: new FormControl('', {
       nonNullable: true,
       validators: [Validators.required, Validators.minLength(2)]
     }),
-    paragraphs: new FormControl(3, { nonNullable: true }),
-    sentencesPerParagraph: new FormControl(5, { nonNullable: true })
+    paragraphs: new FormControl(3, {nonNullable: true}),
+    paragraphLength: new FormControl('moyen' as const, {nonNullable: true})
   });
+
+  // Méthodes pour incrémenter/décrémenter le nombre de paragraphes
+  incrementParagraphs(): void {
+    const current = this.form.get('paragraphs')?.value || 1;
+    this.form.get('paragraphs')?.setValue(current + 1);
+  }
+
+  decrementParagraphs(): void {
+    const current = this.form.get('paragraphs')?.value || 1;
+    if (current > 1) {
+      this.form.get('paragraphs')?.setValue(current - 1);
+    }
+  }
 
   onSubmit(): void {
     if (this.form.invalid) return;
@@ -215,7 +278,7 @@ export class LoremGeneratorComponent {
     const request: LoremRequest = {
       theme: formValue.theme.trim(),
       paragraphs: formValue.paragraphs,
-      sentencesPerParagraph: formValue.sentencesPerParagraph
+      paragraphLength: formValue.paragraphLength
     };
 
     this.loremService.generateLorem(request).subscribe({
