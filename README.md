@@ -1,8 +1,31 @@
-# 🎯 Anything Ipsum
+<div align="center">
+ <img src="public/a_ipsum_512.png" width="512"/>
 
-> *Lorem ipsum dolor sit amet... but make it* **AI-powered** ✨
+<h1 style="background: linear-gradient(135deg, #8B5CF6 0%, #3B82F6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Anything Ipsum</h1>
 
-Welcome to **Anything Ipsum** - where traditional placeholder text meets cutting-edge artificial intelligence! Generate creative, contextual, and downright entertaining placeholder content for any project, powered by **Mistral AI**.
+<br/>
+
+<!-- Badges principaux -->
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/damienmarill/anything-ipsum?style=for-the-badge&logo=github&color=8B5CF6)](https://github.com/damienmarill/anything-ipsum/releases)
+[![GitHub stars](https://img.shields.io/github/stars/damienmarill/anything-ipsum?style=for-the-badge&logo=github&color=F59E0B)](https://github.com/damienmarill/anything-ipsum/stargazers)
+[![GitHub issues](https://img.shields.io/github/issues/damienmarill/anything-ipsum?style=for-the-badge&logo=github&color=EF4444)](https://github.com/damienmarill/anything-ipsum/issues)
+[![License](https://img.shields.io/github/license/damienmarill/anything-ipsum?style=for-the-badge&color=8B5CF6)](LICENSE)
+
+<!-- Badges techniques -->
+[![Angular](https://img.shields.io/badge/Angular-20+-DD0031?style=for-the-badge&logo=angular&logoColor=white)](https://angular.io/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Mistral AI](https://img.shields.io/badge/Mistral-AI-FF6B35?style=for-the-badge&logo=ai&logoColor=white)](https://mistral.ai/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+
+<!-- Bouton Test it -->
+<br/>
+
+[![Test it Live](https://img.shields.io/badge/🚀_Test_it_Live-Visit_Demo-10B981?style=for-the-badge&logoColor=white)](https://ipsum.marill.dev)
+
+<em>Lorem ipsum dolor sit amet... but make it</em> <strong>AI-powered</strong> ✨
+</div>
+
+<img width="100%" src="https://capsule-render.vercel.app/api?type=waving&color=8B5CF6&height=120&section=footer"/>
 
 ## 🌟 What is Anything Ipsum?
 
