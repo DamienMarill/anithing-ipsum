@@ -1,9 +1,7 @@
 services:
   anything-ipsum:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: production
+    image: ghcr.io/damienmarill/anything-ipsum:latest
+    pull_policy: always
     ports:
       - "4000:4000"
     environment:
