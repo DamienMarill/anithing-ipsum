@@ -18,11 +18,11 @@ interface LoremForm {
       <div class="container mx-auto px-4 py-8 max-w-4xl">
         <!-- Header -->
         <div class="text-center mb-8">
-          <h1 class="text-6xl leading-20 font-bold bg-grad-clip text-transparent">Anything Ipsum</h1>
-          <h2 class="text-2xl font-bold bg-grad-clip text-transparent mb-2">
+          <h1 class="text-4xl md:text-6xl leading-16 md:leading-20 font-bold bg-grad-clip text-transparent">Anything Ipsum</h1>
+          <h2 class="text-lg md:text-2xl font-bold bg-grad-clip text-transparent mb-2">
             Générateur de Lorem Ipsum Thématique
           </h2>
-          <p class="text-lg text-color max-w-xl mx-auto">
+          <p class="text-base md:text-lg text-color max-w-xl mx-auto">
             Créez du texte de remplissage personnalisé sur n'importe quel thème.
             Parfait pour vos maquettes, prototypes et projets de design.
           </p>
@@ -69,7 +69,7 @@ interface LoremForm {
                     <button
                       type="button"
                       (click)="decrementParagraphs()"
-                      class="flex items-center justify-center w-10 h-10 secondary"
+                      class="flex items-center justify-center min-w-10 min-h-10 w-10 h-10 secondary"
                       [disabled]="isDecrementDisabled"
                     >
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -82,13 +82,13 @@ interface LoremForm {
                       type="number"
                       min="1"
                       formControlName="paragraphs"
-                      class="flex-1 text-center input"
+                      class="flex-1 w-1 text-center input"
                     />
 
                     <button
                       type="button"
                       (click)="incrementParagraphs()"
-                      class="flex items-center justify-center w-10 h-10 secondary"
+                      class="flex items-center justify-center  min-w-10 min-h-10 w-10 h-10 secondary"
                       [disabled]="isIncrementDisabled"
                     >
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -103,7 +103,7 @@ interface LoremForm {
                   <label class="block text-sm font-medium text-color mb-3">
                     Taille de paragraphe
                   </label>
-                  <div class="flex gap-6">
+                  <div class="flex gap-6 flex-wrap">
                     @for (option of paragraphLengthOptions; track option.value) {
                       <label class="flex items-center space-x-3 cursor-pointer">
                         <input
