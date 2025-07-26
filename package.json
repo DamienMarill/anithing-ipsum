@@ -1,15 +1,15 @@
 {
-  "name": "anithing-ipsum",
+  "name": "anything-ipsum",
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "start:prod": "npm run build && npm run serve:ssr:anithing-ipsum",
+    "start:prod": "npm run build && npm run serve:ssr:anything-ipsum",
     "build": "ng build",
     "build:prod": "ng build --configuration production",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "serve:ssr:anithing-ipsum": "node dist/anithing-ipsum/server/server.mjs",
+    "serve:ssr:anything-ipsum": "node dist/anything-ipsum/server/server.mjs",
     "dev": "ng serve --open",
     "lint": "ng lint"
   },

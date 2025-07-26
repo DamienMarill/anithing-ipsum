@@ -32,6 +32,9 @@ COPY --from=builder /app/dist ./dist
 # Copy environment file template
 COPY .env.exemple ./.env.exemple
 
+# Install wget for health checks
+RUN apk add --no-cache wget
+
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S angular -u 1001
@@ -42,6 +45,6 @@ EXPOSE 4000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:4000/api/health || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:4000/api/health || exit 1
 
-CMD ["npm", "run", "serve:ssr:anithing-ipsum"]
+CMD ["npm", "run", "serve:ssr:anything-ipsum"]

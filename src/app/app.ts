@@ -8,5 +8,5 @@ import { LoremGeneratorComponent } from './components/lorem-generator.component'
   styleUrl: './app.css'
 })
 export class App {
-  protected readonly title = signal('anithing-ipsum');
+  protected readonly title = signal('anything-ipsum');
 }

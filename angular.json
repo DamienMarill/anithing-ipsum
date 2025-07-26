@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "anithing-ipsum": {
+    "anything-ipsum": {
       "projectType": "application",
       "schematics": {},
       "root": "",
@@ -61,10 +61,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "anithing-ipsum:build:production"
+              "buildTarget": "anything-ipsum:build:production"
             },
             "development": {
-              "buildTarget": "anithing-ipsum:build:development"
+              "buildTarget": "anything-ipsum:build:development"
             }
           },
           "defaultConfiguration": "development"
