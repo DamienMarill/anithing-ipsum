@@ -14,7 +14,7 @@ interface LoremForm {
   selector: 'app-lorem-generator',
   imports: [CommonModule, ReactiveFormsModule],
   template: `
-    <div class="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
+    <div class="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 dark:from-purple-950 dark:via-blue-950 dark:to-indigo-950">
       <div class="container mx-auto px-4 py-8 max-w-4xl">
         <!-- Header -->
         <div class="text-center mb-8">
@@ -31,13 +31,13 @@ interface LoremForm {
         <!-- Formulaire -->
         <div class="mb-8">
           <form [formGroup]="form" (ngSubmit)="onSubmit()"
-                class="bg-base rounded-xl shadow-lg p-6 border border-gray-100">
+                class="bg-base rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
             <div class="flex items-center gap-3 mb-6">
               <svg class="w-6 h-6 text-color-light" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
               </svg>
-              <h2 class="text-xl font-semibold text-color">Paramètres de génération</h2>
+              <h3 class="text-xl font-semibold text-color">Paramètres de génération</h3>
             </div>
 
             <div class="space-y-6">
@@ -53,7 +53,6 @@ interface LoremForm {
                   placeholder="Ex: pirates, cuisine française, space, medieval..."
                   class="w-full input"
                   [class.border-red-500]="form.get('theme')?.invalid && form.get('theme')?.touched"
-                  [disabled]="isLoading()"
                 />
                 @if (form.get('theme')?.invalid && form.get('theme')?.touched) {
                   <p class="mt-1 text-sm text-red-600">Le thème est requis</p>
@@ -70,8 +69,8 @@ interface LoremForm {
                     <button
                       type="button"
                       (click)="decrementParagraphs()"
-                      [disabled]="isLoading() || (form.get('paragraphs')?.value ?? 1) <= 1"
                       class="flex items-center justify-center w-10 h-10 secondary"
+                      [disabled]="isDecrementDisabled"
                     >
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
@@ -84,14 +83,13 @@ interface LoremForm {
                       min="1"
                       formControlName="paragraphs"
                       class="flex-1 text-center input"
-                      [disabled]="isLoading()"
                     />
 
                     <button
                       type="button"
                       (click)="incrementParagraphs()"
-                      [disabled]="isLoading()"
                       class="flex items-center justify-center w-10 h-10 secondary"
+                      [disabled]="isIncrementDisabled"
                     >
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -113,7 +111,6 @@ interface LoremForm {
                           [value]="option.value"
                           formControlName="paragraphLength"
                           class="radio"
-                          [disabled]="isLoading()"
                         />
                         <div class="flex-1">
                           <div class="text-sm font-medium text-color">{{ option.label }}</div>
@@ -152,7 +149,7 @@ interface LoremForm {
 
         <!-- Result -->
         @if (result() || error()) {
-          <div class="rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+          <div class="rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden">
             @if (error()) {
               <div class="bg-red-50 border-l-4 border-red-400 p-4">
                 <div class="flex">
@@ -254,15 +251,35 @@ export class LoremGeneratorComponent {
 
   // Méthodes pour incrémenter/décrémenter le nombre de paragraphes
   incrementParagraphs(): void {
+    if (this.isLoading()) return; // Empêche l'action si en cours de chargement
     const current = this.form.get('paragraphs')?.value || 1;
     this.form.get('paragraphs')?.setValue(current + 1);
   }
 
   decrementParagraphs(): void {
+    if (this.isLoading()) return; // Empêche l'action si en cours de chargement
     const current = this.form.get('paragraphs')?.value || 1;
     if (current > 1) {
       this.form.get('paragraphs')?.setValue(current - 1);
     }
+  }
+
+  // Méthodes pour gérer l'état disabled des contrôles
+  private updateFormState(): void {
+    if (this.isLoading()) {
+      this.form.disable();
+    } else {
+      this.form.enable();
+    }
+  }
+
+  // Getter pour vérifier si un bouton doit être désactivé
+  get isDecrementDisabled(): boolean {
+    return this.isLoading() || (this.form.get('paragraphs')?.value ?? 1) <= 1;
+  }
+
+  get isIncrementDisabled(): boolean {
+    return this.isLoading();
   }
 
   onSubmit(): void {
@@ -271,6 +288,7 @@ export class LoremGeneratorComponent {
     const formValue = this.form.value as Required<typeof this.form.value>;
 
     this.isLoading.set(true);
+    this.updateFormState(); // Désactive le formulaire pendant le chargement
     this.error.set('');
     this.result.set('');
     this.currentTheme.set(formValue.theme);
@@ -284,6 +302,7 @@ export class LoremGeneratorComponent {
     this.loremService.generateLorem(request).subscribe({
       next: (response) => {
         this.isLoading.set(false);
+        this.updateFormState(); // Réactive le formulaire
         if (response.success) {
           this.result.set(response.text);
           this.error.set('');
@@ -294,6 +313,7 @@ export class LoremGeneratorComponent {
       },
       error: (err) => {
         this.isLoading.set(false);
+        this.updateFormState(); // Réactive le formulaire même en cas d'erreur
         this.error.set('Erreur de connexion au serveur');
         this.result.set('');
         console.error('Erreur:', err);
