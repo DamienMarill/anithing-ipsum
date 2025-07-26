@@ -1,9 +1,9 @@
 import { Component, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { LoremGeneratorComponent } from './components/lorem-generator.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [LoremGeneratorComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })

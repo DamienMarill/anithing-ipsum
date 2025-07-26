@@ -1,3 +1,7 @@
+// Configuration des variables d'environnement
+import { config } from 'dotenv';
+config();
+
 import {
   AngularNodeAppEngine,
   createNodeRequestHandler,
@@ -6,23 +10,145 @@ import {
 } from '@angular/ssr/node';
 import express from 'express';
 import { join } from 'node:path';
+import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
 const app = express();
 const angularApp = new AngularNodeAppEngine();
 
-/**
- * Example Express Rest API endpoints can be defined here.
- * Uncomment and define endpoints as necessary.
- *
- * Example:
- * ```ts
- * app.get('/api/{*splat}', (req, res) => {
- *   // Handle API request
- * });
- * ```
- */
+// Middleware pour parser le JSON
+app.use(express.json());
+
+// Configuration CORS
+app.use(cors({
+  origin: process.env['APP_URL'],
+  credentials: true
+}));
+
+// Rate limiting pour l'API
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 50, // Limite à 50 requêtes par fenêtre
+  message: 'Trop de requêtes depuis cette IP, veuillez réessayer plus tard.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// API endpoint pour générer le lorem ipsum
+app.post('/api/generate-lorem', apiLimiter, async (req, res): Promise<void> => {
+  try {
+    const { theme, paragraphs, sentencesPerParagraph } = req.body;
+
+    // Validation des paramètres
+    if (!theme || !theme.trim()) {
+      res.status(400).json({
+        success: false,
+        error: 'Le thème est requis'
+      });
+      return;
+    }
+
+    if (!paragraphs || paragraphs < 1 || paragraphs > 10) {
+      res.status(400).json({
+        success: false,
+        error: 'Le nombre de paragraphes doit être entre 1 et 10'
+      });
+      return;
+    }
+
+    if (!sentencesPerParagraph || sentencesPerParagraph < 2 || sentencesPerParagraph > 10) {
+      res.status(400).json({
+        success: false,
+        error: 'Le nombre de phrases par paragraphe doit être entre 2 et 10'
+      });
+      return;
+    }
+
+    // Vérification de la clé API
+    const apiKey = process.env['MISTRAL_API_KEY'];
+    if (!apiKey || apiKey === 'your_mistral_api_key_here') {
+      res.status(500).json({
+        success: false,
+        error: 'Clé API Mistral non configurée'
+      });
+      return;
+    }
+
+    // Préparation du prompt pour Mistral
+    const prompt = `Génère un faux texte de type "lorem ipsum" sur le thème "${theme}".
+Le texte doit contenir ${paragraphs} paragraphe(s), avec environ ${sentencesPerParagraph} phrases par paragraphe.
+
+Règles importantes :
+- Utilise un vocabulaire et des références liés au thème "${theme}"
+- Les phrases doivent avoir une structure similaire au lorem ipsum (un peu artificielle mais lisible)
+- Mélange des mots du thème avec des mots de liaison classiques
+- Commence chaque paragraphe par une majuscule
+- Assure-toi que le texte soit cohérent avec le thème choisi
+- Le résultat doit être du texte de remplissage, pas du contenu informatif réel
+
+Réponds uniquement avec le texte généré, sans commentaires ni explications.`;
+
+    // Appel à l'API Mistral
+    const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: 'mistral-large-latest',
+        messages: [
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        max_tokens: 1000,
+        temperature: 0.7
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error('Erreur API Mistral:', response.status, errorData);
+      res.status(500).json({
+        success: false,
+        error: 'Erreur lors de la génération du texte'
+      });
+      return;
+    }
+
+    const data = await response.json();
+    const generatedText = data.choices[0]?.message?.content;
+
+    if (!generatedText) {
+      res.status(500).json({
+        success: false,
+        error: 'Aucun texte généré'
+      });
+      return;
+    }
+
+    res.json({
+      success: true,
+      text: generatedText.trim()
+    });
+
+  } catch (error) {
+    console.error('Erreur lors de la génération:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Erreur interne du serveur'
+    });
+  }
+});
 
 /**
  * Serve static files from /browser
