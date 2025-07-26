@@ -14,7 +14,7 @@ interface LoremForm {
   selector: 'app-lorem-generator',
   imports: [CommonModule, ReactiveFormsModule],
   template: `
-    <div class="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
+    <div class="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 dark:from-purple-950 dark:via-blue-950 dark:to-indigo-950">
       <div class="container mx-auto px-4 py-8 max-w-4xl">
         <!-- Header -->
         <div class="text-center mb-8">
@@ -31,13 +31,13 @@ interface LoremForm {
         <!-- Formulaire -->
         <div class="mb-8">
           <form [formGroup]="form" (ngSubmit)="onSubmit()"
-                class="bg-base rounded-xl shadow-lg p-6 border border-gray-100">
+                class="bg-base rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
             <div class="flex items-center gap-3 mb-6">
               <svg class="w-6 h-6 text-color-light" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
               </svg>
-              <h2 class="text-xl font-semibold text-color">Paramètres de génération</h2>
+              <h3 class="text-xl font-semibold text-color">Paramètres de génération</h3>
             </div>
 
             <div class="space-y-6">
@@ -149,7 +149,7 @@ interface LoremForm {
 
         <!-- Result -->
         @if (result() || error()) {
-          <div class="rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+          <div class="rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden">
             @if (error()) {
               <div class="bg-red-50 border-l-4 border-red-400 p-4">
                 <div class="flex">
