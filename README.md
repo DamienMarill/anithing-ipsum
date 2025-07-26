@@ -1,5 +1,5 @@
 <div align="center">
- <img src="public/a_ipsum_512.png" width="512"/>
+ <img src="public/a_ipsum_512.png" width="150"/>
 
 <h1 style="background: linear-gradient(135deg, #8B5CF6 0%, #3B82F6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Anything Ipsum</h1>
 
@@ -243,6 +243,6 @@ git push origin feature/amazing-new-feature
 
 *"Lorem ipsum dolor sit amet, consectetur adipiscing elit... but why settle for Latin when you can have* **anything**? *"* ✨
 
-[🚀 Try It Live](https://anything-ipsum.com) • [⭐ Star on GitHub](https://github.com/damienmarill/anything-ipsum) • [🐳 Docker Hub](https://github.com/damienmarill/anything-ipsum/pkgs/container/anything-ipsum)
+[🚀 Try It Live](https://ipsum.marill.dev) • [⭐ Star on GitHub](https://github.com/damienmarill/anything-ipsum) • [🐳 Docker Hub](https://github.com/damienmarill/anything-ipsum/pkgs/container/anything-ipsum)
 
 </div>
