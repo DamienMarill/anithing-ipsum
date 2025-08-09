@@ -150,9 +150,14 @@ Réponds uniquement avec le texte généré, sans commentaires ni explications.`
       return;
     }
 
+    // Post-traitement pour nettoyer le texte généré
+    const cleanedText = generatedText
+      .trim()
+      .replace(/\*/g, ''); // Supprime tous les astérisques
+
     res.json({
       success: true,
-      text: generatedText.trim()
+      text: cleanedText
     });
 
   } catch (error) {
