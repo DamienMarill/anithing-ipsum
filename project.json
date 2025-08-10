@@ -59,6 +59,10 @@
     },
     "serve": {
       "executor": "@angular/build:dev-server",
+      "options": {
+        "allowedHosts": true,
+        "host": "0.0.0.0"
+      },
       "configurations": {
         "production": {
           "buildTarget": "anything-ipsum:build:production"
