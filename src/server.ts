@@ -42,10 +42,11 @@ app.get('/api/health', (req, res) => {
   res.json({status: 'ok', timestamp: new Date().toISOString()});
 });
 
+
 // API endpoint pour générer le lorem ipsum
 app.post('/api/generate-lorem', apiLimiter, async (req, res): Promise<void> => {
   try {
-    const {theme, paragraphs, paragraphLength} = req.body;
+    const {theme, paragraphs, paragraphLength, stream = true} = req.body;
 
     // Validation des paramètres
     if (!theme || !theme.trim()) {
@@ -109,6 +110,20 @@ Règles importantes :
 
 Réponds uniquement avec le texte généré, sans commentaires ni explications.`;
 
+    // Configuration pour le streaming ou non
+    const mistralConfig = {
+      model: 'mistral-large-latest',
+      messages: [
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      max_tokens: 1000,
+      temperature: 0.7,
+      stream: stream
+    };
+
     // Appel à l'API Mistral
     const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
       method: 'POST',
@@ -116,17 +131,7 @@ Réponds uniquement avec le texte généré, sans commentaires ni explications.`
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`
       },
-      body: JSON.stringify({
-        model: 'mistral-large-latest',
-        messages: [
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        max_tokens: 1000,
-        temperature: 0.7
-      })
+      body: JSON.stringify(mistralConfig)
     });
 
     if (!response.ok) {
@@ -139,26 +144,83 @@ Réponds uniquement avec le texte généré, sans commentaires ni explications.`
       return;
     }
 
-    const data = await response.json();
-    const generatedText = data.choices[0]?.message?.content;
+    if (stream) {
+      // Configuration des headers pour le streaming
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      res.setHeader('Transfer-Encoding', 'chunked');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+      res.setHeader('Access-Control-Allow-Origin', '*');
 
-    if (!generatedText) {
-      res.status(500).json({
-        success: false,
-        error: 'Aucun texte généré'
+      // Stream la réponse
+      if (!response.body) {
+        res.status(500).end('Erreur: pas de corps de réponse');
+        return;
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          
+          if (done) {
+            break;
+          }
+
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split('\n');
+          
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') {
+                res.end();
+                return;
+              }
+              
+              try {
+                const parsed = JSON.parse(data);
+                const content = parsed.choices?.[0]?.delta?.content;
+                if (content) {
+                  // Nettoyer le contenu et l'envoyer
+                  const cleanedContent = content.replace(/\*/g, '');
+                  res.write(cleanedContent);
+                }
+              } catch (e) {
+                // Ignorer les erreurs de parsing JSON
+              }
+            }
+          }
+        }
+      } finally {
+        reader.releaseLock();
+        res.end();
+      }
+    } else {
+      // Mode non-streaming (legacy)
+      const data = await response.json();
+      const generatedText = data.choices[0]?.message?.content;
+
+      if (!generatedText) {
+        res.status(500).json({
+          success: false,
+          error: 'Aucun texte généré'
+        });
+        return;
+      }
+
+      // Post-traitement pour nettoyer le texte généré
+      const cleanedText = generatedText
+        .trim()
+        .replace(/\*/g, ''); // Supprime tous les astérisques
+
+      res.json({
+        success: true,
+        text: cleanedText
       });
-      return;
     }
-
-    // Post-traitement pour nettoyer le texte généré
-    const cleanedText = generatedText
-      .trim()
-      .replace(/\*/g, ''); // Supprime tous les astérisques
-
-    res.json({
-      success: true,
-      text: cleanedText
-    });
 
   } catch (error) {
     console.error('Erreur lors de la génération:', error);

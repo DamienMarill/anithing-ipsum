@@ -189,22 +189,50 @@
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ theme, paragraphs })
+          body: JSON.stringify({ theme, paragraphs, paragraphLength: 'moyen', stream: true })
         });
         
         if (!response.ok) {
           throw new Error('Failed to generate content');
         }
         
-        const data = await response.json();
-        
-        // Send the generated content to Figma
-        parent.postMessage({
-          pluginMessage: {
-            type: 'generate-lorem',
-            content: data.content
+        if (!response.body) {
+          throw new Error('Response body is null');
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let accumulatedText = '';
+
+        const readChunk = async () => {
+          const { done, value } = await reader.read();
+          
+          if (done) {
+            // Send the final content to Figma
+            parent.postMessage({
+              pluginMessage: {
+                type: 'generate-lorem',
+                content: accumulatedText
+              }
+            }, '*');
+            return;
           }
-        }, '*');
+
+          const text = decoder.decode(value, { stream: true });
+          accumulatedText += text;
+          
+          // Optionally update preview in real-time (uncomment if desired)
+          // parent.postMessage({
+          //   pluginMessage: {
+          //     type: 'update-preview',
+          //     content: accumulatedText
+          //   }
+          // }, '*');
+          
+          readChunk();
+        };
+
+        await readChunk();
         
       } catch (error) {
         console.error('Error:', error);
