@@ -1,0 +1,13 @@
+{
+  "name": "Anything Ipsum Plugin",
+  "id": "anything-ipsum-plugin",
+  "api": "1.0.0",
+  "main": "main.js",
+  "ui": "ui.html",
+  "capabilities": [],
+  "enableProposedApi": false,
+  "editorType": ["figma"],
+  "networkAccess": {
+    "allowedDomains": ["*"]
+  }
+}
