@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run build:prod:*)",
+      "Bash(npm run lint)",
+      "Bash(npm test)",
+      "Bash(npm run lint:*)",
+      "Bash(npx eslint:*)",
+      "Bash(docker build:*)",
+      "Bash(npx nx show project:*)",
+      "Bash(npx nx run:*)"
+    ],
+    "deny": []
+  }
+}

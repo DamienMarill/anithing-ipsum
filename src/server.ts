@@ -188,7 +188,7 @@ Réponds uniquement avec le texte généré, sans commentaires ni explications.`
                   const cleanedContent = content.replace(/\*/g, '');
                   res.write(cleanedContent);
                 }
-              } catch (e) {
+              } catch {
                 // Ignorer les erreurs de parsing JSON
               }
             }
