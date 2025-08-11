@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Anything Ipsum Generator</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      padding: 20px;
+      background: #f8f9fa;
+      color: #333;
+    }
+    
+    .container {
+      max-width: 400px;
+      margin: 0 auto;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    
+    .title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #1e1e1e;
+      margin-bottom: 8px;
+    }
+    
+    .subtitle {
+      font-size: 14px;
+      color: #666;
+    }
+    
+    .form-group {
+      margin-bottom: 16px;
+    }
+    
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 6px;
+      color: #333;
+    }
+    
+    input, select {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+    
+    input:focus, select:focus {
+      outline: none;
+      border-color: #0066cc;
+      box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.1);
+    }
+    
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background: #0066cc;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    
+    .btn:hover {
+      background: #0052a3;
+    }
+    
+    .btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    
+    .message {
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      margin-top: 16px;
+      text-align: center;
+    }
+    
+    .message.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    
+    .message.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    
+    .loading {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid #ffffff;
+      border-radius: 50%;
+      border-top-color: transparent;
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 8px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1 class="title">🎨 Anything Ipsum</h1>
+      <p class="subtitle">Generate themed lorem ipsum for your designs</p>
+    </div>
+    
+    <form id="generateForm">
+      <div class="form-group">
+        <label for="theme">Theme</label>
+        <input 
+          type="text" 
+          id="theme" 
+          placeholder="e.g., pirate, space, cooking..."
+          required
+        >
+      </div>
+      
+      <div class="form-group">
+        <label for="paragraphs">Number of paragraphs</label>
+        <select id="paragraphs">
+          <option value="1">1 paragraph</option>
+          <option value="2" selected>2 paragraphs</option>
+          <option value="3">3 paragraphs</option>
+          <option value="4">4 paragraphs</option>
+          <option value="5">5 paragraphs</option>
+        </select>
+      </div>
+      
+      <button type="submit" class="btn" id="generateBtn">
+        Generate Lorem Ipsum
+      </button>
+    </form>
+    
+    <div id="message" class="message" style="display: none;"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById('generateForm');
+    const generateBtn = document.getElementById('generateBtn');
+    const messageDiv = document.getElementById('message');
+    
+    // API endpoint - adjust this to match your backend
+    const API_URL = 'http://localhost:4000/api/generate-lorem';
+    
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const theme = document.getElementById('theme').value.trim();
+      const paragraphs = parseInt(document.getElementById('paragraphs').value);
+      
+      if (!theme) {
+        showMessage('Please enter a theme', 'error');
+        return;
+      }
+      
+      setLoading(true);
+      hideMessage();
+      
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ theme, paragraphs, paragraphLength: 'moyen', stream: true })
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to generate content');
+        }
+        
+        if (!response.body) {
+          throw new Error('Response body is null');
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let accumulatedText = '';
+
+        const readChunk = async () => {
+          const { done, value } = await reader.read();
+          
+          if (done) {
+            // Send the final content to Figma
+            parent.postMessage({
+              pluginMessage: {
+                type: 'generate-lorem',
+                content: accumulatedText
+              }
+            }, '*');
+            return;
+          }
+
+          const text = decoder.decode(value, { stream: true });
+          accumulatedText += text;
+          
+          // Optionally update preview in real-time (uncomment if desired)
+          // parent.postMessage({
+          //   pluginMessage: {
+          //     type: 'update-preview',
+          //     content: accumulatedText
+          //   }
+          // }, '*');
+          
+          readChunk();
+        };
+
+        await readChunk();
+        
+      } catch (error) {
+        console.error('Error:', error);
+        showMessage('Failed to generate content. Make sure your backend is running!', 'error');
+      } finally {
+        setLoading(false);
+      }
+    });
+    
+    function setLoading(loading) {
+      generateBtn.disabled = loading;
+      generateBtn.innerHTML = loading 
+        ? '<span class="loading"></span>Generating...'
+        : 'Generate Lorem Ipsum';
+    }
+    
+    function showMessage(text, type) {
+      messageDiv.textContent = text;
+      messageDiv.className = `message ${type}`;
+      messageDiv.style.display = 'block';
+    }
+    
+    function hideMessage() {
+      messageDiv.style.display = 'none';
+    }
+    
+    // Listen for messages from the plugin
+    window.addEventListener('message', (event) => {
+      const msg = event.data.pluginMessage;
+      if (msg.type === 'success') {
+        showMessage(msg.message, 'success');
+      } else if (msg.type === 'error') {
+        showMessage(msg.message, 'error');
+      }
+    });
+  </script>
+</body>
+</html>

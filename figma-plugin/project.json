@@ -1,0 +1,23 @@
+{
+  "name": "figma-plugin",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "figma-plugin/src",
+  "projectType": "application",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/figma-plugin"],
+      "options": {
+        "command": "npm run build:figma"
+      }
+    },
+    "dev": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/figma-plugin"],
+      "options": {
+        "command": "npm run build:figma:dev"
+      }
+    }
+  }
+}

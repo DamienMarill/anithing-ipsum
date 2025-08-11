@@ -196,6 +196,9 @@ interface LoremForm {
               <div class="p-6 bg-base">
                 <div class="prose prose-gray max-w-none text-color leading-relaxed whitespace-pre-line">
                   {{ result() }}
+                  @if (isLoading() && result()) {
+                    <span class="animate-pulse text-purple-500">|</span>
+                  }
                 </div>
               </div>
             }
@@ -299,17 +302,19 @@ export class LoremGeneratorComponent {
       paragraphLength: formValue.paragraphLength
     };
 
-    this.loremService.generateLorem(request).subscribe({
-      next: (response) => {
+    // Utiliser le streaming par défaut pour une meilleure UX
+    let accumulatedText = '';
+    
+    this.loremService.generateLoremStream(request).subscribe({
+      next: (chunk) => {
+        // Accumuler le texte au fur et à mesure
+        accumulatedText += chunk;
+        this.result.set(accumulatedText);
+      },
+      complete: () => {
         this.isLoading.set(false);
         this.updateFormState(); // Réactive le formulaire
-        if (response.success) {
-          this.result.set(response.text);
-          this.error.set('');
-        } else {
-          this.error.set(response.error || 'Une erreur est survenue');
-          this.result.set('');
-        }
+        this.error.set('');
       },
       error: (err) => {
         this.isLoading.set(false);
@@ -320,6 +325,7 @@ export class LoremGeneratorComponent {
       }
     });
   }
+
 
   async copyToClipboard(): Promise<void> {
     try {
